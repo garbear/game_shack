@@ -83,7 +83,7 @@ def main(folder):
         "platform": platform,
         "directory": directory,
     }
-    print(json.dumps(data, encoding="utf-8"))
+    print json.dumps(data)
 
     print "Success. Go to http://bit.ly/s9d2 to get started!"
     raw_input()
