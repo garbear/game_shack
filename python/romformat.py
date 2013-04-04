@@ -239,11 +239,11 @@ def parse_gameboy(filename):
     data = open(filename, "rb").read(0x14b + 1)
     props = {}
     props["code"] = sanitize(data[0x134 : 0x134 + 15])
-    props["publisher"] = gameboy_publishers.get(data[0x144 : 0x144 + 2], None)
+    props["publisher"] = gameboy_publishers.get(data[0x144 : 0x144 + 2], "")
     # Publisher at $14b takes precedence, if possible
     if data[0x14b] != 0x33:
-        pub2 = gameboy_publishers.get("%02X" % ord(data[0x14b]), None)
-        if pub2 != None:
+        pub2 = gameboy_publishers.get("%02X" % ord(data[0x14b]), "")
+        if pub2 != "":
             props["publisher"] = pub2 
     return props
 
@@ -255,8 +255,8 @@ def parse_gameboy_advance(filename):
     data = open(filename, "rb").read(0xb0 + 3)
     props = {}
     props["self.title"] = sanitize(data[0xa0 : 0xa0 + 12])
-    props["self.code"] = data[0xac : 0xac + 4]
-    props["self.publisher"] = gameboy_publishers.get(data[0xb0 : 0xb0 + 2], None)
+    props["self.code"] = sanitize(data[0xac : 0xac + 4])
+    props["self.publisher"] = gameboy_publishers.get(data[0xb0 : 0xb0 + 2], "")
     return props
 
 def Parse(filename):
