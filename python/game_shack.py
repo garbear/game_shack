@@ -75,23 +75,30 @@ def main(folder):
                 file_record["properties"] = props
             directory.append(file_record)
 
-    data = {
+    game_list = {
         "site": "thegamesdb.org",
         "platform": platform,
         "directory": directory,
         "username": "testuser",
     }
 
-    req = urllib2.Request("http://localhost/gameshacks/hoard", data=json.dumps(data))
+    req = urllib2.Request("http://localhost/gameshacks/hoard", data=json.dumps(game_list), \
+      headers={"Content-type": "application/json"})
     resp = urllib2.urlopen(req).read()
-    json.loads(resp)
-    if "result" in resp:
-        print "Success. Go to http://localhost/ to get started!"
-    else:
-        if "error" in resp:
-            print "Could not upload game list: %s" % resp["error"]["message"]
+    
+    try:
+        result = json.loads(resp)
+        if "result" in result:
+            print "Success. Go to http://localhost/ to get started!"
         else:
-            print "Could not upload game list"
+            if "error" in result:
+                print "Could not upload game list: %s" % result["error"]["message"]
+            else:
+                print "Could not upload game list: unknown error"
+    except:
+        print "Could not upload game list: error parsing response:"
+        print resp
+    
 
 readline.set_completer(completer)
 readline.parse_and_bind("tab: complete")

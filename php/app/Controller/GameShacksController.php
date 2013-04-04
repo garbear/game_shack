@@ -26,6 +26,7 @@ class GameShacksController extends AppController {
  * @var array
  */
     #public $uses = array();
+    public $uses = false;
 
     public function index() {
         // Grab all gameshacks and pass them to the view:
@@ -34,21 +35,40 @@ class GameShacksController extends AppController {
     }
 
     public function hoard() {
-        $postData = false;
-        if (!$postData)
+        if (!$this->request->isPost())
+        {
             $this->redirect(array('action' => 'index'));
-        
-        // Save POST data
+            return;
+        }
 
-        $success = array(
-            "result" => "success",
-        );
-        $error = array(
-            "error" => array(
-                "code" => 1,
-                "message" => "Error",
-            ),
-        );
+        # Pre-initialize our return statuses
+        $success = array( "result" => "success" );
+        $error = array( "error" => array( "code" => 0, "message" => NULL ) );
+
+        $gameList = $this->request->input('json_decode', true);
+
+        if (!is_array($gameList))
+        {
+            $error['error']['code'] = 1;
+            $error['error']['message'] = 'POST data is not a json object';
+            return new CakeResponse(array('body' => json_encode($error)));
+        }
+
+        $i = 2;
+        foreach (array('username', 'site', 'platform', 'directory') as $var)
+        {
+            if (!array_key_exists($var, $gameList))
+            {
+                $error['error']['code'] = $i;
+                $error['error']['message'] = "POST data doesn't contain a $var field";
+                return new CakeResponse(array('body' => json_encode($error)));
+            }
+            ${$var} = $gameList[$var];
+            $i++;
+        }
+
+        
+
         return new CakeResponse(array('body' => json_encode($success)));
     }
 
