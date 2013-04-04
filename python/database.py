@@ -7,42 +7,61 @@ db_name = 'game_shack'
 
 def CreateTables():
     global cur
-    cur.execute(
-        "CREATE TABLE gamefiles (" + \
-            "id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY, " + \
-            "filename VARCHAR(128), " + \
-            "site VARCHAR(10), " + \
-            "platform VARCHAR(40), " + \
-            "idProperty INTEGER, " + \
-            "created DATETIME DEFAULT NULL" + \
-        ")"
-    )
-    cur.execute(
-        "CREATE TABLE properties (" + \
-            "id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY, " + \
-            "code VARCHAR(16), " + \
-            "title VARCHAR(32), " + \
-            "publisher VARCHAR(32)" + \
-        ")"
-    )
-    cur.execute(
-        "CREATE TABLE usernames (" + \
-            "id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY, " + \
-            "username VARCHAR(32)" + \
-        ")"
-    )
-    cur.execute(
-        "CREATE TABLE gamefiles_link_usernames (" + \
-            "id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY, " + \
-            "username VARCHAR(32)" + \
-        ")"
-    )
-
+    tables = getTables()
+    if "properties" not in tables:
+        cur.execute(
+            "CREATE TABLE properties (" + \
+                "id INTEGER AUTO_INCREMENT PRIMARY KEY, " + \
+                "code VARCHAR(16), " + \
+                "title VARCHAR(32), " + \
+                "publisher VARCHAR(32)" + \
+            ")"
+        )
+    if "gamefiles" not in tables:
+        cur.execute(
+            "CREATE TABLE gamefiles (" + \
+                "id INTEGER AUTO_INCREMENT PRIMARY KEY, " + \
+                "filename VARCHAR(128), " + \
+                "site VARCHAR(10), " + \
+                "platform VARCHAR(40), " + \
+                "property_id INTEGER, " + \
+                "created DATETIME DEFAULT NULL, " + \
+                "CONSTRAINT FK_gamefiles_properties " + \
+                    "FOREIGN KEY (property_id) " + \
+                    "REFERENCES properties (id) " + \
+                    "ON DELETE SET NULL" + \
+            ")"
+        )
+    if "usernames" not in tables:
+        cur.execute(
+            "CREATE TABLE usernames (" + \
+                "id INTEGER AUTO_INCREMENT PRIMARY KEY, " + \
+                "username VARCHAR(32)" + \
+            ")"
+        )
+    if "gamefileslinkusernames" not in tables:
+        cur.execute(
+            "CREATE TABLE gamefileslinkusernames (" + \
+                "gamefile_id INTEGER, " + \
+                "username_id INTEGER, " + \
+                "INDEX idx_gamefileslinkusernames_gamefile_id (gamefile_id), " + \
+                "INDEX idx_gamefileslinkusernames_username_id (username_id), " + \
+                "CONSTRAINT idx_gamefileslinkusernames_cross1 " + \
+                    "UNIQUE INDEX (gamefile_id, username_id), " + \
+                "CONSTRAINT idx_gamefileslinkusernames_cross2 " + \
+                    "UNIQUE INDEX (username_id, gamefile_id), " + \
+                "CONSTRAINT FK_gamefileslinkusernames_gamefiles " + \
+                    "FOREIGN KEY (gamefile_id) " + \
+                    "REFERENCES gamefiles (id) " + \
+                    "ON DELETE SET NULL, " + \
+                "CONSTRAINT FK_gamefileslinkusernames_usernames " + \
+                    "FOREIGN KEY (username_id) " + \
+                    "REFERENCES usernames (id) " + \
+                    "ON DELETE SET NULL" + \
+            ")"
+        )
 
 def getTables():
-    """
-    Untested
-    """
     global cur
     cur.execute(
         "SELECT table_name " + \
@@ -72,8 +91,7 @@ def main():
     global db, cur
     db = MySQLdb.connect(host="localhost", user="root", passwd="xbmc", db=db_name)
     cur = db.cursor()
-    if len(getTables()) == 0:
-        CreateTables()
+    CreateTables()
 
 
 class TestDatabase(unittest.TestCase):
@@ -90,11 +108,17 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue("gamefiles" in tables)
         self.assertTrue("properties" in tables)
         self.assertTrue("usernames" in tables)
-        self.assertTrue("gamefiles_link_usernames" in tables)
+        self.assertTrue("gamefileslinkusernames" in tables)
 
     def test_get_indices(self):
         indices = getIndices()
-        self.assertEqual(len(indices), 0)
+        print "Indices: " + str(indices)
+        self.assertEqual(len(indices), 5)
+        self.assertTrue("FK_gamefiles_properties" in indices)
+        self.assertTrue("idx_gamefileslinkusernames_gamefile_id" in indices)
+        self.assertTrue("idx_gamefileslinkusernames_username_id" in indices)
+        self.assertTrue("idx_gamefileslinkusernames_cross1" in indices)
+        self.assertTrue("idx_gamefileslinkusernames_cross2" in indices)
 
 
 db = None
