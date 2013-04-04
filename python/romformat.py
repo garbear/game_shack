@@ -283,16 +283,16 @@ class TestParseFunctions(unittest.TestCase):
 
     def test_gameboy(self):
         props = Parse("test/Tetris.gb")
-        self.assertTrue(len(props))
-        self.assertTrue(props["code"] == "TETRIS")
-        self.assertTrue(props["publisher"] == "01")
+        self.assertGreater(len(props), 0)
+        self.assertEquals(props["code"], "TETRIS")
+        self.assertEquals(props["publisher"], "01")
 
     def test_gameboy_advance(self):
         props = Parse("test/The Legend of Zelda - A Link to the Past & Four Swords.gba")
-        self.assertTrue(len(props))
-        self.assertTrue(props["title"] == "GBAZELDA")
-        self.assertTrue(props["code"] == "AZLE")
-        self.assertTrue(props["publisher"] == "01")
+        self.assertGreater(len(props), 0)
+        self.assertEquals(props["title"], "GBAZELDA")
+        self.assertEquals(props["code"], "AZLE")
+        self.assertEquals(props["publisher"], "01")
 
 if __name__ == '__main__':
     unittest.main()
