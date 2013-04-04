@@ -1,6 +1,6 @@
 <?php
 /**
- * GameShacks controller.
+ * GameFiles controller.
  *
  * @copyright     Copyright (c) 2013 Garrett Brown
  * @link          http://kineticthings.com
@@ -9,24 +9,23 @@
 App::uses('AppController', 'Controller');
 
 /**
- * GameShacks controller.
+ * GameFiles controller.
  */
-class GameShacksController extends AppController {
+class GameFilesController extends AppController {
 
 /**
  * Controller name
  *
  * @var string
  */
-    public $name = 'GameShacks';
+    public $name = 'GameFiles';
 
 /**
  * This controller does not use a model
  *
  * @var array
  */
-    #public $uses = array();
-    public $uses = false;
+    #public $uses = array('GameFile');
 
     public function index() {
         // Grab all gameshacks and pass them to the view:
@@ -46,9 +45,9 @@ class GameShacksController extends AppController {
         $success = array( "result" => "success" );
         $error = array( "error" => array( "code" => $i, "message" => NULL ) );
 
-        $gameList = $this->request->input('json_decode', true);
+        $gameFiles = $this->request->input('json_decode', true);
 
-        if (!is_array($gameList))
+        if (!is_array($gameFiles))
         {
             $error['error']['code'] = $i;
             $error['error']['message'] = 'POST data is not a json object';
@@ -58,13 +57,13 @@ class GameShacksController extends AppController {
 
         foreach (array('username', 'site', 'platform', 'directory') as $var)
         {
-            if (!array_key_exists($var, $gameList))
+            if (!array_key_exists($var, $gameFiles))
             {
                 $error['error']['code'] = $i;
                 $error['error']['message'] = "POST data doesn't contain a $var field";
                 return new CakeResponse(array('body' => json_encode($error)));
             }
-            ${$var} = $gameList[$var];
+            ${$var} = $gameFiles[$var];
             $i++;
         }
 

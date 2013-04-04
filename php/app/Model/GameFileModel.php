@@ -1,6 +1,6 @@
 <?php
 /**
- * Shack model.
+ * GameFile model.
  *
  * @copyright     Copyright (c) 2013 Garrett Brown
  * @link          http://kineticthings.com
@@ -10,13 +10,13 @@
 App::uses('AppModel', 'Model');
 
 /**
- * Application model for Cake.
+ * GameFile model for Cake.
  *
  * Add your application-wide methods in the class below, your models
  * will inherit them.
  *
  * @package       app.Model
  */
-class Shack extends AppModel {
-    public $name = 'Shack';
+class GameFile extends AppModel {
+    public $name = 'GameFile';
 }
