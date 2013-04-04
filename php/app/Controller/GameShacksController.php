@@ -42,19 +42,20 @@ class GameShacksController extends AppController {
         }
 
         # Pre-initialize our return statuses
+        $i = 1;
         $success = array( "result" => "success" );
-        $error = array( "error" => array( "code" => 0, "message" => NULL ) );
+        $error = array( "error" => array( "code" => $i, "message" => NULL ) );
 
         $gameList = $this->request->input('json_decode', true);
 
         if (!is_array($gameList))
         {
-            $error['error']['code'] = 1;
+            $error['error']['code'] = $i;
             $error['error']['message'] = 'POST data is not a json object';
             return new CakeResponse(array('body' => json_encode($error)));
         }
+        $i++;
 
-        $i = 2;
         foreach (array('username', 'site', 'platform', 'directory') as $var)
         {
             if (!array_key_exists($var, $gameList))
