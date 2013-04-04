@@ -15,16 +15,9 @@ def completer(text, state):
     except IndexError:
         return None
 
-def url_read(url, mime=None):
-    if mime:
-        request = urllib2.Request(url, headers={"Accept" : mime})
-        return urllib2.urlopen(request).read()
-    else:
-        return urllib2.urlopen(url).read()
-
 def get_platforms():
     platforms = list()
-    platformXml = url_read("http://thegamesdb.net/api/GetPlatformsList.php")
+    platformXml = urllib2.urlopen("http://thegamesdb.net/api/GetPlatformsList.php").read()
     root = ET.fromstring(platformXml)
     for platform in root.findall("Platforms/Platform"):
         nametag = platform.find("name")
@@ -70,23 +63,35 @@ def main(folder):
     if '.' in mask:
         mask = mask[mask.rindex('.') + 1 : ]
 
-    print "Uploading games list..."
+    print "Uploading game list..."
     directory = list()
     for f in os.listdir(folder):
         if f.lower().endswith(mask):
+            file_record = {
+                "file": f
+            }
             props = romformat.Parse(f)
-            props["file"] = f
-            directory.append(props)
+            if props:
+                file_record["properties"] = props
+            directory.append(file_record)
 
     data = {
         "site": "thegamesdb.org",
         "platform": platform,
         "directory": directory,
+        "username": "testuser",
     }
-    print json.dumps(data)
 
-    print "Success. Go to http://bit.ly/s9d2 to get started!"
-    raw_input()
+    req = urllib2.Request("http://localhost/gameshacks/hoard", data=json.dumps(data))
+    resp = urllib2.urlopen(req).read()
+    json.loads(resp)
+    if "result" in resp:
+        print "Success. Go to http://localhost/ to get started!"
+    else:
+        if "error" in resp:
+            print "Could not upload game list: %s" % resp["error"]["message"]
+        else:
+            print "Could not upload game list"
 
 readline.set_completer(completer)
 readline.parse_and_bind("tab: complete")
