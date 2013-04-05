@@ -25,7 +25,7 @@ class GameFilesController extends AppController {
  *
  * @var array
  */
-    #public $uses = array('GameFile');
+    public $uses = array('GameFile', 'Property', 'Username');
 
     public function index() {
         // Grab all gameshacks and pass them to the view:
@@ -34,18 +34,44 @@ class GameFilesController extends AppController {
     }
 
     public function hoard() {
+        /*
         if (!$this->request->isPost())
         {
             $this->redirect(array('action' => 'index'));
             return;
         }
+        */
 
         # Pre-initialize our return statuses
         $i = 1;
         $success = array( "result" => "success" );
         $error = array( "error" => array( "code" => $i, "message" => NULL ) );
 
-        $gameFiles = $this->request->input('json_decode', true);
+        #$gameFiles = $this->request->input('json_decode', true);
+        $gameFiles = array(
+            'directory' => array(
+                array(
+                    'properties' => array (
+                        'publisher' => '01',
+                        'code' => 'TETRIS',
+                        'extension' => 'gb',
+                    ),
+                    'filename' => 'Tetris.gb',
+                ),
+                array(
+                    'properties' => array (
+                        'publisher' => '01',
+                        'code' => 'AZLE',
+                        'extension' => 'gba',
+                        'title' => 'GBAZELDA',
+                    ),
+                    'filename' => 'The Legend of Zelda - A Link to the Past & Four Swords.gba',
+                ),
+            ),
+            'platform' => 'Nintendo Game Boy',
+            'username' => 'testuser',
+            'site' => 'thegamesdb.org',
+        );
 
         if (!is_array($gameFiles))
         {
@@ -67,9 +93,83 @@ class GameFilesController extends AppController {
             $i++;
         }
 
-        
+        # Query the user, and create a new user if one doesn't exist
+        $user = $this->Username->find('first', array(
+            'conditions' => array(
+                'Username.username' => $username,
+            ),
+            'contain' => 'GameFile',
+            'recursive' => 2,
+        ));
+        if (count($user) == 0)
+        {
+            $this->Username->create(array('username' => $username));
+            $user = $this->Username->save();
+        }
 
-        return new CakeResponse(array('body' => json_encode($success)));
+        if (array_key_exists('GameFile', $user) && count($user['GameFile']))
+        {
+            $error['error']['code'] = $i;
+            $error['error']['message'] = '$user["GameFile"]: ' . json_encode($user['GameFile']);
+            return new CakeResponse(array('body' => json_encode($error)));
+            unset($user['GameFile']);
+        }
+
+        foreach ($directory as $file)
+        {
+            if (!array_key_exists('filename', $file))
+                continue;
+            $gamefile = array(
+                'filename' => $file['filename'],
+                'site' => $site,
+                'platform' => $platform,
+            );
+            if (array_key_exists('properties', $file))
+            {
+                $properties = $this->addProperties($file['properties']);
+                if (count($properties))
+                    $gamefile['property_id'] = $properties["Property"]["id"];
+            }
+            $gamefile_id = $this->addGameFile($gamefile);
+            $user['GameFile']['GameFile'][] = $gamefile_id;
+        }
+
+        $result = $this->Username->saveAll($user);
+
+        $error['error']['code'] = $i;
+        $error['error']['message'] = "Result: " . $result . ", Username: " . json_encode($user);
+        return new CakeResponse(array('body' => json_encode($error)));
+        
+        #return new CakeResponse(array('body' => json_encode($success)));
+    }
+
+    private function addProperties($properties)
+    {
+        $search = array();
+        $data = array();
+        $property = array();
+        foreach (array('extension', 'code', 'title', 'publisher') as $var)
+        {
+            if (array_key_exists($var, $properties) && $properties[$var])
+                $search['Property.' . $var] = $data[$var] = $properties[$var];
+        }
+        if (count($search))
+        {
+            $property = $this->Property->find('first', array('conditions' => $search));
+            if (!count($property))
+            {
+                $this->Property->create($data);
+                $property = $this->Property->save();
+            }
+        }
+        return $property;
+    }
+
+    private function addGameFile($data)
+    {
+        $this->GameFile->create($data);
+        $gamefile = $this->GameFile->save();
+        return $gamefile["GameFile"]["id"];
     }
 
 /**
