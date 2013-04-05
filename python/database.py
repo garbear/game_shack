@@ -17,8 +17,6 @@ def CreateTables():
                 "title VARCHAR(32), " + \
                 "publisher VARCHAR(32), " + \
                 "gamefile_count INTEGER DEFAULT 0, " + \
-                "game_file_count INTEGER DEFAULT 0, " + \
-                #"INDEX idx_properties_code (code), " + \
                 "CONSTRAINT idx_properties_cross " + \
                     "UNIQUE INDEX (code, title, publisher)" + \
                 # Should the unique constraint also include extension?
