@@ -10,8 +10,8 @@ import urllib2
 import xml.etree.ElementTree as ET
 
 def completer(text, state):
-    global platforms
-    options = [p for p in platforms if p.startswith(text)]
+    global autocompletions
+    options = [op for op in autocompletions if op.startswith(text)]
     try:
         return options[state]
     except IndexError:
@@ -59,27 +59,38 @@ def getGameList(folder, mask):
     return directory
 
 def main(folder=None):
-    global platforms
-    platforms = list()
+    global autocompletions
+    autocompletions = list()
     if folder == None:
         folder = os.getcwd()
 
     print("Downloading platform list...")
-    #platforms = getPlatforms()
-    #print_platforms(platforms)
+    autocompletions = platforms = getPlatforms()
+    print_platforms(platforms)
 
     inp = raw_input("> ")
     platform = None
     for p in platforms:
         if p.lower().startswith(inp.lower()):
             platform = p
+            break
     if not platform:
         print "No platform selected"
         #sys.exit(0)
 
-    sys.stdout.write("Using platform %s. Enter extension mask: " % platform)
-    sys.stdout.flush()
-    mask = raw_input().lower()
+    extensions = list()
+    skip = ["py", "pyc", "pyo"]
+    for f in os.listdir(folder):
+        # Look for extension of at most 8 characters
+        if '.' in f[len(f) - 8 : ] and f[len(f) - 1] != '.':
+            ext = f[f.rindex('.') + 1 : ]
+            if ext not in skip and ext not in extensions:
+                extensions.append(ext)
+
+    print "Using platform %s. Enter extension mask (options are %s):" % (platform,
+              ', '.join(sorted(extensions)))
+    autocompletions = extensions
+    mask = raw_input("> ").lower()
     if not mask:
         sys.exit()
 
@@ -135,5 +146,5 @@ readline.parse_and_bind("tab: complete")
 readline.set_completer_delims("|") # So that spaces aren't ignores
 
 if __name__ == "__main__":
-    unittest.main()
-    #main(sys.argv[1] if len(sys.argv) else None)
+    main(sys.argv[1] if len(sys.argv) >= 2 else None)
+    #unittest.main()
