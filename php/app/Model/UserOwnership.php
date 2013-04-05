@@ -1,6 +1,6 @@
 <?php
 /**
- * GameFile model.
+ * Username model.
  *
  * @copyright     Copyright (c) 2013 Garrett Brown
  * @link          http://kineticthings.com
@@ -9,14 +9,15 @@
 
 App::uses('AppModel', 'Model');
 
-class Gamefile extends AppModel {
+class UserOwnership extends AppModel {
+    public $useTable = 'gamefileslinkusernames';
+
     public $belongsTo = array(
-        'Property' => array(
-            'counterCache' => true,
+        'Gamefile',
+        'Username' => array(
+            'counterCache' => 'hoarded',
         ),
     );
-
-    public $hasMany = 'UserOwnership';
 
     public $actsAs = array('Containable');
     

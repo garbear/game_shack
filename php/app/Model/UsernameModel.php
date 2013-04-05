@@ -10,11 +10,9 @@
 App::uses('AppModel', 'Model');
 
 class Username extends AppModel {
+    public $hasMany = 'UserOwnership';
 
-    public $hasAndBelongsToMany = array(
-        'Gamefile' => array(
-            'className' => 'Gamefile',
-            'joinTable' => 'gamefileslinkusernames',
-        ),
-    );
+    public $actsAs = array('Containable');
+    
+    public $recursive = -1;
 }

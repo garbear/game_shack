@@ -10,5 +10,9 @@
 App::uses('AppModel', 'Model');
 
 class Property extends AppModel {
-    public $hasMany = 'GameFile';
+    public $hasMany = 'Gamefile';
+
+    public $actsAs = array('Containable');
+    
+    public $recursive = -1;
 }

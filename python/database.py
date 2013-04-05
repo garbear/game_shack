@@ -17,15 +17,16 @@ def CreateTables():
                 "title VARCHAR(32), " + \
                 "publisher VARCHAR(32), " + \
                 "gamefile_count INTEGER DEFAULT 0, " + \
+                "game_file_count INTEGER DEFAULT 0, " + \
                 #"INDEX idx_properties_code (code), " + \
                 "CONSTRAINT idx_properties_cross " + \
                     "UNIQUE INDEX (code, title, publisher)" + \
                 # Should the unique constraint also include extension?
             ")"
         )
-    if "game_files" not in tables:
+    if "gamefiles" not in tables:
         cur.execute(
-            "CREATE TABLE game_files (" + \
+            "CREATE TABLE gamefiles (" + \
                 "id INTEGER AUTO_INCREMENT PRIMARY KEY, " + \
                 "filename VARCHAR(128), " + \
                 "site VARCHAR(10), " + \
@@ -64,7 +65,7 @@ def CreateTables():
                     "UNIQUE INDEX (username_id, gamefile_id), " + \
                 "CONSTRAINT FK_gamefileslinkusernames_gamefiles " + \
                     "FOREIGN KEY (gamefile_id) " + \
-                    "REFERENCES game_files (id) " + \
+                    "REFERENCES gamefiles (id) " + \
                     "ON DELETE SET NULL, " + \
                 "CONSTRAINT FK_gamefileslinkusernames_usernames " + \
                     "FOREIGN KEY (username_id) " + \
@@ -117,7 +118,7 @@ class TestDatabase(unittest.TestCase):
     def test_get_tables(self):
         tables = getTables()
         self.assertEqual(len(tables), 4)
-        self.assertTrue("game_files" in tables)
+        self.assertTrue("gamefiles" in tables)
         self.assertTrue("properties" in tables)
         self.assertTrue("usernames" in tables)
         self.assertTrue("gamefileslinkusernames" in tables)

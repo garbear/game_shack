@@ -97,7 +97,7 @@ def main(folder=None):
     print "Uploading game list..."
 
     game_list = {
-        "site": "thegamesdb.org",
+        "site": "thegamesdb.net",
         "platform": platform,
         "directory": getGameList(folder, mask),
         "username": "testuser",
