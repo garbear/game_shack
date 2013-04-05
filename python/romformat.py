@@ -240,15 +240,18 @@ def parse_gameboy(filename):
     data = open(filename, "rb").read(0x14b + 1)
     props = {}
     props["code"] = sanitize(data[0x134 : 0x134 + 15])
-    if data[0x144 : 0x144 + 2] in gameboy_publishers:
-        props["publisher"] = data[0x144 : 0x144 + 2]
-    else:
-        props["publisher"] = ""
+    pub = data[0x144 : 0x144 + 2]
+    props["publisher"] = pub if pub in gameboy_publishers else ""
     # Publisher at $14b takes precedence, if possible
-    if data[0x14b] != 0x33:
+    if len(data) > 0x14b and data[0x14b] != 0x33:
         pub2 = "%02X" % ord(data[0x14b])
         if pub2 in gameboy_publishers:
             props["publisher"] = pub2
+
+    if props["code"] or props["publisher"]:
+        props["extension"] = "gb"
+    else:
+        props = {}
     return props
 
 gameboy_advance_extensions = ["gba", "agb"]
@@ -260,10 +263,13 @@ def parse_gameboy_advance(filename):
     props = {}
     props["title"] = sanitize(data[0xa0 : 0xa0 + 12])
     props["code"] = sanitize(data[0xac : 0xac + 4])
-    if data[0xb0 : 0xb0 + 2] in gameboy_publishers:
-        props["publisher"] = data[0xb0 : 0xb0 + 2]
+    pub = data[0xb0 : 0xb0 + 2]
+    props["publisher"] = pub if pub in gameboy_publishers else ""
+
+    if props["title"] or props["code"] or props["publisher"]:
+        props["extension"] = "gba"
     else:
-        props["publisher"] = ""
+        props = {}
     return props
 
 def Parse(filename):
@@ -281,18 +287,30 @@ class TestParseFunctions(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_empty(self):
+        empty = Parse("test/empty")
+        self.assertEqual(len(empty), 0)
+
     def test_gameboy(self):
+        empty = Parse("test/empty.gb")
+        self.assertEqual(len(empty), 0)
+
         props = Parse("test/Tetris.gb")
-        self.assertGreater(len(props), 0)
+        self.assertEquals(len(props), 3)
         self.assertEquals(props["code"], "TETRIS")
         self.assertEquals(props["publisher"], "01")
+        self.assertEquals(props["extension"], "gb")
 
     def test_gameboy_advance(self):
+        empty = Parse("test/empty.gba")
+        self.assertEqual(len(empty), 0)
+
         props = Parse("test/The Legend of Zelda - A Link to the Past & Four Swords.gba")
-        self.assertGreater(len(props), 0)
+        self.assertEquals(len(props), 4)
         self.assertEquals(props["title"], "GBAZELDA")
         self.assertEquals(props["code"], "AZLE")
         self.assertEquals(props["publisher"], "01")
+        self.assertEquals(props["extension"], "gba")
 
 if __name__ == '__main__':
     unittest.main()
