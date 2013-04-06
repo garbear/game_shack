@@ -27,7 +27,7 @@ Sign in
     <label for="Passwd">
         <strong class="passwd-label">Password</strong>
     </label>
-    <input name="Passwd" id="Passwd" value="0000000000000000"><?php /* We only show the first 16 of 32 chars */ ?>
+    <input name="Passwd" id="Passwd" value=""><?php /* We only show the first 16 of 32 chars */ ?>
 
 </div>
 

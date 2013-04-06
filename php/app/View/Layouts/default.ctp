@@ -40,6 +40,8 @@ $cakeDescription = __d('cake_dev', 'CakePHP: the rapid development php framework
 <script>
 window.jQuery || document.write('<script src="/app/webroot/js/jquery-1.9.1.min.js"><\/script>');
 </script>
+<script src="/app/webroot/js/gameshack.js"></script>
+<script src="/app/webroot/js/md5.min.js"></script>
 </head>
 <body>
 	<div id="container">
