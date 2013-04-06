@@ -13,13 +13,6 @@ App::uses('AppController', 'Controller');
  */
 class GamesController extends AppController {
 
-/**
- * Controller name
- *
- * @var string
- */
-    public $name = 'Games';
-
     #public $uses = array('Gamefile', 'Property', 'Username', 'UserOwnership');
 
     public function index() {

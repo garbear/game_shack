@@ -13,13 +13,6 @@ App::uses('AppController', 'Controller');
  */
 class GameFilesController extends AppController {
 
-/**
- * Controller name
- *
- * @var string
- */
-    public $name = 'GameFiles';
-
     public $uses = array('Gamefile', 'Property', 'Username', 'UserOwnership');
 
     public function hoard() {
