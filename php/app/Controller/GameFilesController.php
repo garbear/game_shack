@@ -75,12 +75,16 @@ class GameFilesController extends AppController {
             $i++;
         }
 
-        if (!$platform)
+        if (empty($platform))
             return $this->makeError($i, 'Invalid platform');
+        else
+            $platform = strval($platform);
         $i++;
 
-        if (!$username)
+        if (empty($username))
             return $this->makeError($i, 'Invalid username');
+        else
+            $username = strval($username);
         $i++;
 
         $validSites = array('thegamesdb.net');
