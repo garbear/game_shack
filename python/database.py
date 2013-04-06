@@ -43,7 +43,7 @@ def CreateTables():
         cur.execute(
             "CREATE TABLE users (" + \
                 "id INTEGER AUTO_INCREMENT PRIMARY KEY, " + \
-                "user VARCHAR(16), " + \
+                "username VARCHAR(16), " + \
                 "email VARCHAR(40), " + \
                 "hoarded INTEGER DEFAULT 0, " + \
                 "resolved INTEGER DEFAULT 0, " + \

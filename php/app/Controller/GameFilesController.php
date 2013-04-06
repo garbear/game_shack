@@ -165,12 +165,12 @@ class GameFilesController extends AppController {
     {
         $user = $this->User->find('first', array(
             'conditions' => array(
-                'user' => $username,
+                'username' => $username,
             ),
         ));
         if (!count($user))
         {
-            $this->User->create(array('user' => $username));
+            $this->User->create(array('username' => $username));
             $user = $this->User->save();
         }
         return $user;
