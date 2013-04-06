@@ -28,7 +28,7 @@ $cakeDescription = __d('cake_dev', 'CakePHP: the rapid development php framework
 		<?php echo $title_for_layout; ?>
 	</title>
 	<?php
-		echo $this->Html->meta('icon');
+		echo $this->Html->meta('icon') . "\n\t";
 
 		echo $this->Html->css('cake.generic');
 
@@ -36,6 +36,10 @@ $cakeDescription = __d('cake_dev', 'CakePHP: the rapid development php framework
 		echo $this->fetch('css');
 		echo $this->fetch('script');
 	?>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="/app/webroot/js/jquery-1.9.1.min.js"><\/script>');
+</script>
 </head>
 <body>
 	<div id="container">
