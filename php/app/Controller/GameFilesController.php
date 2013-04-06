@@ -13,12 +13,14 @@ App::uses('AppController', 'Controller');
  */
 class GameFilesController extends AppController {
 
-    public $uses = array('Gamefile', 'Property', 'Username', 'UserOwnership');
+    public $uses = array('Gamefile', 'Property', 'User', 'UserOwnership');
 
-    public function hoard() {
+    public function beforeFilter() {
         # For some reason, Gamefile::$useTable isn't working...
         $this->Gamefile->useTable = 'gamefiles';
+    }
 
+    public function hoard() {
         /*
         if (!$this->request->isPost())
         {
@@ -93,16 +95,13 @@ class GameFilesController extends AppController {
         $i++;
 
         $user = $this->loadUser($username);
-        $gamefiles = $this->getUserGames($user['Username']['id'], $platform);
+        $gamefiles = $this->getUserGames($user['User']['id'], $platform);
 
         $processed = false;
         foreach ($directory as $file)
         {
             if (!array_key_exists('filename', $file))
                 continue;
-
-            if (!$processed)
-                $processed = true;
 
             # Check to see if the file exists in the database. $gamefiles is
             # ordered, exploit this to reduce O(n*m) to O(n*logm).
@@ -122,6 +121,8 @@ class GameFilesController extends AppController {
                         $this->Gamefile->save(array(
                             'Gamefile' => $gamefiles[$index]['Gamefile'],
                         ));
+                        if (!$processed)
+                            $processed = true;
                     }
                     continue;
                 }
@@ -140,7 +141,10 @@ class GameFilesController extends AppController {
                 if (count($properties))
                     $gamefile['property_id'] = $properties['Property']['id'];
             }
-            $this->addGamefile($user['Username']['id'], $gamefile);
+            $this->addGamefile($user['User']['id'], $gamefile);
+
+            if (!$processed)
+                $processed = true;
         }
 
         if (!$processed)
@@ -159,15 +163,15 @@ class GameFilesController extends AppController {
      */
     private function loadUser($username)
     {
-        $user = $this->Username->find('first', array(
+        $user = $this->User->find('first', array(
             'conditions' => array(
-                'username' => $username,
+                'user' => $username,
             ),
         ));
         if (!count($user))
         {
-            $this->Username->create(array('username' => $username));
-            $user = $this->Username->save();
+            $this->User->create(array('user' => $username));
+            $user = $this->User->save();
         }
         return $user;
     }
@@ -176,7 +180,7 @@ class GameFilesController extends AppController {
     {
         return $this->UserOwnership->find('all', array(
             'conditions' => array(
-                'username_id' => $user_id,
+                'user_id' => $user_id,
                 'Gamefile.platform' => $platform,
             ),
             'contain' => 'Gamefile',
@@ -240,10 +244,10 @@ class GameFilesController extends AppController {
         $this->Gamefile->create($data);
         $gamefile = $this->Gamefile->save();
 
-        # Next map it to the correct Username
+        # Next map it to the correct User
         $this->UserOwnership->create(array(
             'gamefile_id' => $gamefile["Gamefile"]["id"],
-            'username_id' => $user_id,
+            'user_id' => $user_id,
         ));
         $this->UserOwnership->save();
     }

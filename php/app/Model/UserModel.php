@@ -9,7 +9,7 @@
 
 App::uses('AppModel', 'Model');
 
-class Username extends AppModel {
+class User extends AppModel {
 
     public $hasMany = 'UserOwnership';
 

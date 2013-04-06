@@ -39,11 +39,11 @@ def CreateTables():
                     "ON DELETE SET NULL" + \
             ")"
         )
-    if "usernames" not in tables:
+    if "users" not in tables:
         cur.execute(
-            "CREATE TABLE usernames (" + \
+            "CREATE TABLE users (" + \
                 "id INTEGER AUTO_INCREMENT PRIMARY KEY, " + \
-                "username VARCHAR(16), " + \
+                "user VARCHAR(16), " + \
                 "email VARCHAR(40), " + \
                 "hoarded INTEGER DEFAULT 0, " + \
                 "resolved INTEGER DEFAULT 0, " + \
@@ -51,24 +51,24 @@ def CreateTables():
                 "modified DATETIME DEFAULT NULL" + \
             ")"
         )
-    if "gamefileslinkusernames" not in tables:
+    if "gamefileslinkusers" not in tables:
         cur.execute(
-            "CREATE TABLE gamefileslinkusernames (" + \
+            "CREATE TABLE gamefileslinkusers (" + \
                 "gamefile_id INTEGER, " + \
-                "username_id INTEGER, " + \
-                "INDEX idx_gamefileslinkusernames_gamefile_id (gamefile_id), " + \
-                "INDEX idx_gamefileslinkusernames_username_id (username_id), " + \
-                "CONSTRAINT idx_gamefileslinkusernames_cross1 " + \
-                    "UNIQUE INDEX (gamefile_id, username_id), " + \
-                "CONSTRAINT idx_gamefileslinkusernames_cross2 " + \
-                    "UNIQUE INDEX (username_id, gamefile_id), " + \
-                "CONSTRAINT FK_gamefileslinkusernames_gamefiles " + \
+                "user_id INTEGER, " + \
+                "INDEX idx_gamefileslinkusers_gamefile_id (gamefile_id), " + \
+                "INDEX idx_gamefileslinkusers_user_id (user_id), " + \
+                "CONSTRAINT idx_gamefileslinkusers_cross1 " + \
+                    "UNIQUE INDEX (gamefile_id, user_id), " + \
+                "CONSTRAINT idx_gamefileslinkusers_cross2 " + \
+                    "UNIQUE INDEX (user_id, gamefile_id), " + \
+                "CONSTRAINT FK_gamefileslinkusers_gamefiles " + \
                     "FOREIGN KEY (gamefile_id) " + \
                     "REFERENCES gamefiles (id) " + \
                     "ON DELETE SET NULL, " + \
-                "CONSTRAINT FK_gamefileslinkusernames_usernames " + \
-                    "FOREIGN KEY (username_id) " + \
-                    "REFERENCES usernames (id) " + \
+                "CONSTRAINT FK_gamefileslinkusers_users " + \
+                    "FOREIGN KEY (user_id) " + \
+                    "REFERENCES users (id) " + \
                     "ON DELETE SET NULL" + \
             ")"
         )
@@ -119,8 +119,8 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(len(tables), 4)
         self.assertTrue("gamefiles" in tables)
         self.assertTrue("properties" in tables)
-        self.assertTrue("usernames" in tables)
-        self.assertTrue("gamefileslinkusernames" in tables)
+        self.assertTrue("users" in tables)
+        self.assertTrue("gamefileslinkusers" in tables)
 
     def test_get_indices(self):
         indices = getIndices()
@@ -128,10 +128,10 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue("idx_gamefiles_cross" in indices)
         self.assertTrue("FK_gamefiles_properties" in indices)
         self.assertTrue("idx_properties_cross" in indices)
-        self.assertTrue("idx_gamefileslinkusernames_gamefile_id" in indices)
-        self.assertTrue("idx_gamefileslinkusernames_username_id" in indices)
-        self.assertTrue("idx_gamefileslinkusernames_cross1" in indices)
-        self.assertTrue("idx_gamefileslinkusernames_cross2" in indices)
+        self.assertTrue("idx_gamefileslinkusers_gamefile_id" in indices)
+        self.assertTrue("idx_gamefileslinkusers_user_id" in indices)
+        self.assertTrue("idx_gamefileslinkusers_cross1" in indices)
+        self.assertTrue("idx_gamefileslinkusers_cross2" in indices)
 
 
 db = None
