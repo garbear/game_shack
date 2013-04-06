@@ -10,6 +10,7 @@
 App::uses('AppModel', 'Model');
 
 class Username extends AppModel {
+
     public $hasMany = 'UserOwnership';
 
     public $actsAs = array('Containable');

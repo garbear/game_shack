@@ -10,6 +10,7 @@
 App::uses('AppModel', 'Model');
 
 class UserOwnership extends AppModel {
+
     public $useTable = 'gamefileslinkusernames';
 
     public $belongsTo = array(

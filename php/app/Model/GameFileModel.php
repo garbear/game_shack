@@ -10,6 +10,7 @@
 App::uses('AppModel', 'Model');
 
 class Gamefile extends AppModel {
+
     public $belongsTo = array(
         'Property' => array(
             'counterCache' => true,

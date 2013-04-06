@@ -10,6 +10,7 @@
 App::uses('AppModel', 'Model');
 
 class Property extends AppModel {
+
     public $hasMany = 'Gamefile';
 
     public $actsAs = array('Containable');
