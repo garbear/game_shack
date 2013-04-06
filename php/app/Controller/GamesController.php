@@ -14,6 +14,7 @@ App::uses('AppController', 'Controller');
 class GamesController extends AppController {
 
     #public $uses = array('Gamefile', 'Property', 'Username', 'UserOwnership');
+    public $helpers = array('Html');
 
     public function index() {
         $path = func_get_args();
