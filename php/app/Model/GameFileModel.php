@@ -13,7 +13,7 @@ class Gamefile extends AppModel {
 
     public $belongsTo = array(
         'Property' => array(
-            'counterCache' => true,
+            'counterCache' => 'gamefile_count',
         ),
     );
 
