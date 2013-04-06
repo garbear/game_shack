@@ -98,46 +98,44 @@ class GameFilesController extends AppController {
         $user = $this->loadUser($username);
         $gamefiles = $this->getUserGames($user['Username']['id'], $platform);
 
-        # TODO: $gamefiles is alphabetized, we can exploit this to reduce O(n*m) to O(n*logm)
-        foreach ($gamefiles as $gamefile)
-        {
-            foreach ($directory as $key => $file)
-            {
-                if (!array_key_exists('filename', $file))
-                {
-                    unset($directory[$key]);
-                }
-                else if ($gamefile['Gamefile']['filename'] == $file['filename'])
-                {
-                    # The file already exists in the database
-                    # If new properties arrived, add them now
-                    if ($gamefile['Gamefile']['property_id'] === null &&
-                        array_key_exists('properties', $file))
-                    {
-                        $properties = $this->addProperties($file['properties']);
-                        if (count($properties))
-                        {
-                            $gamefile['Gamefile']['property_id'] = $properties['Property']['id'];
-                            $this->Gamefile->save($g);
-                        }
-                    }
-                    unset($directory[$key]);
-                }
-            }
-        }
-
-        if (!count($directory))
-            return $this->makeError($i, 'No new files have been hoarded by the server');
-        $i++;
-
+        $processed = false;
         foreach ($directory as $file)
         {
             if (!array_key_exists('filename', $file))
                 continue;
+
+            if (!$processed)
+                $processed = true;
+
+            # Check to see if the file exists in the database. $gamefiles is
+            # ordered, exploit this to reduce O(n*m) to O(n*logm).
+            if (array_key_exists('properties', $file))
+            {
+                $index = $this->updateProperties($gamefiles, $file, 0, count($gamefiles) - 1);
+                if ($index !== false)
+                {
+                    if (is_int($index))
+                    {
+                        $properties = $this->addProperties($file['properties']);
+                        if (count($properties))
+                            $gamefiles[$index]['Gamefile']['property_id'] = $properties['Property']['id'];
+
+                        # Indirect 'Gamefile' array, because a 'UserOwnership' is
+                        # stored parallel to it in $gamefiles[$index]
+                        $this->Gamefile->save(array(
+                            'Gamefile' => $gamefiles[$index]['Gamefile'],
+                        ));
+                    }
+                    continue;
+                }
+                
+            }
+
+            # Build our new Gamefile object and save it to the database
             $gamefile = array(
-                'filename' => $file['filename'],
-                'site' => $site,
-                'platform' => $platform,
+                    'filename' => $file['filename'],
+                    'site' => $site,
+                    'platform' => $platform,
             );
             if (array_key_exists('properties', $file))
             {
@@ -145,12 +143,12 @@ class GameFilesController extends AppController {
                 if (count($properties))
                     $gamefile['property_id'] = $properties['Property']['id'];
             }
-            $this->UserOwnership->create(array(
-                'gamefile_id' => $this->addGamefile($gamefile),
-                'username_id' => $user['Username']['id'],
-            ));
-            $this->UserOwnership->save();
+            $this->addGamefile($user['Username']['id'], $gamefile);
         }
+
+        if (!$processed)
+            return $this->makeError($i, 'No new files have been hoarded by the server');
+        $i++;
 
         return new CakeResponse(array(
             'body' => json_encode(array(
@@ -185,8 +183,36 @@ class GameFilesController extends AppController {
                 'Gamefile.platform' => $platform,
             ),
             'contain' => 'Gamefile',
-            #'order' => 'Gamefile.filename',
+            'order' => 'Gamefile.filename',
         ));
+    }
+
+    private function updateProperties($gamefiles, $file, $lower, $upper)
+    {
+        if ($lower > $upper)
+            return false;
+
+        # PHP doesn't do integer division, and casting is SLOW, so bit-shift
+        $mid = ($lower + $upper) >> 1;
+
+        # Check for key in lower subset first, then upper subset
+        if ($gamefiles[$mid]['Gamefile']['filename'] > $file['filename'])
+            return $this->updateProperties($gamefiles, $file, $lower, $mid - 1);
+        if ($gamefiles[$mid]['Gamefile']['filename'] < $file['filename'])
+            return $this->updateProperties($gamefiles, $file, $mid + 1, $upper);
+
+        # The file already exists in the database. If properties are needed, add them now
+        if ($gamefiles[$mid]['Gamefile']['property_id'] === null)
+        {
+            $properties = $this->addProperties($file['properties']);
+            if (count($properties))
+            {
+                $gamefiles[$mid]['Gamefile']['property_id'] = $properties['Property']['id'];
+                return $mid;
+            }
+        }
+
+        return true;
     }
 
     private function addProperties($properties)
@@ -211,13 +237,20 @@ class GameFilesController extends AppController {
         return $property;
     }
 
-    private function addGamefile($data)
+    private function addGamefile($user_id, $data)
     {
+        # First create the Gamefile object
         $this->Gamefile->create($data);
         $gamefile = $this->Gamefile->save();
-        return $gamefile["Gamefile"]["id"];
+
+        # Next map it to the correct Username
+        $this->UserOwnership->create(array(
+            'gamefile_id' => $gamefile["Gamefile"]["id"],
+            'username_id' => $user_id,
+        ));
+        $this->UserOwnership->save();
     }
-    
+
     private function makeError($i, $msg)
     {
         $error = array(
