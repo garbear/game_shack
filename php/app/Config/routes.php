@@ -22,15 +22,15 @@
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 /**
- * Here, we are connecting '/' (base path) to controller called 'Pages',
+ * Here, we are connecting '/' (base path) to controller called 'Games',
  * its action called 'display', and we pass a param to select the view file
- * to use (in this case, /app/View/Pages/home.ctp)...
+ * to use (in this case, /app/View/Games/home.ctp)...
  */
-	Router::connect('/', array('controller' => 'pages', 'action' => 'display', 'home'));
+	Router::connect('/', array('controller' => 'games', 'action' => 'display', 'home'));
 /**
- * ...and connect the rest of 'Pages' controller's urls.
+ * ...and connect the rest of 'Games' controller's urls.
  */
-	Router::connect('/pages/*', array('controller' => 'pages', 'action' => 'display'));
+	Router::connect('/games/*', array('controller' => 'games', 'action' => 'display'));
 
 /**
  * Load all plugin routes. See the CakePlugin documentation on

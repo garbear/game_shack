@@ -28,6 +28,26 @@ class GameFilesController extends AppController {
     public $uses = array('Gamefile', 'Property', 'Username', 'UserOwnership');
 
     public function index() {
+        $path = func_get_args();
+        /*
+        $count = count($path);
+        if (!$count) {
+            $this->redirect('/');
+        }
+        $page = $subpage = $title_for_layout = null;
+
+        if (!empty($path[0])) {
+            $page = $path[0];
+        }
+        if (!empty($path[1])) {
+            $subpage = $path[1];
+        }
+        if (!empty($path[$count - 1])) {
+            $title_for_layout = Inflector::humanize($path[$count - 1]);
+        }
+        $this->set(compact('page', 'subpage', 'title_for_layout'));
+        $this->render(implode('/', $path));
+        */
         // Grab all gameshacks and pass them to the view:
         #$gameshacks = $this->GameShack->find('all');
         #$this->set('gameshacks', $gameshacks);
@@ -39,7 +59,7 @@ class GameFilesController extends AppController {
 
         if (!$this->request->isPost())
         {
-            $this->redirect(array('action' => 'index'));
+            $this->redirect(array('controller' => 'games', 'action' => 'index'));
             return;
         }
 
@@ -220,33 +240,5 @@ class GameFilesController extends AppController {
         $this->Gamefile->create($data);
         $gamefile = $this->Gamefile->save();
         return $gamefile["Gamefile"]["id"];
-    }
-
-/**
- * Displays a view
- *
- * @param mixed What page to display
- * @return void
- */
-    public function display() {
-        $path = func_get_args();
-
-        $count = count($path);
-        if (!$count) {
-            $this->redirect('/');
-        }
-        $page = $subpage = $title_for_layout = null;
-
-        if (!empty($path[0])) {
-            $page = $path[0];
-        }
-        if (!empty($path[1])) {
-            $subpage = $path[1];
-        }
-        if (!empty($path[$count - 1])) {
-            $title_for_layout = Inflector::humanize($path[$count - 1]);
-        }
-        $this->set(compact('page', 'subpage', 'title_for_layout'));
-        $this->render(implode('/', $path));
     }
 }

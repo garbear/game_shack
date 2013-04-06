@@ -1,6 +1,6 @@
 <?php
 /**
- * GameShacks view.
+ * GameFiles view.
  *
  * @copyright     Copyright (c) 2013 Garrett Brown
  * @link          http://kineticthings.com
