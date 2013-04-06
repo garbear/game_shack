@@ -44,6 +44,7 @@ def CreateTables():
             "CREATE TABLE usernames (" + \
                 "id INTEGER AUTO_INCREMENT PRIMARY KEY, " + \
                 "username VARCHAR(32), " + \
+                "email_hash CHAR(32), " + \
                 "hoarded INTEGER DEFAULT 0, " + \
                 "resolved INTEGER DEFAULT 0, " + \
                 "created DATETIME DEFAULT NULL, " + \
