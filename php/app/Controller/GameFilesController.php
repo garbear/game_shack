@@ -20,53 +20,28 @@ class GameFilesController extends AppController {
  */
     public $name = 'GameFiles';
 
-/**
- * This controller does not use a model
- *
- * @var array
- */
     public $uses = array('Gamefile', 'Property', 'Username', 'UserOwnership');
-
-    public function index() {
-        $path = func_get_args();
-        /*
-        $count = count($path);
-        if (!$count) {
-            $this->redirect('/');
-        }
-        $page = $subpage = $title_for_layout = null;
-
-        if (!empty($path[0])) {
-            $page = $path[0];
-        }
-        if (!empty($path[1])) {
-            $subpage = $path[1];
-        }
-        if (!empty($path[$count - 1])) {
-            $title_for_layout = Inflector::humanize($path[$count - 1]);
-        }
-        $this->set(compact('page', 'subpage', 'title_for_layout'));
-        $this->render(implode('/', $path));
-        */
-        // Grab all gameshacks and pass them to the view:
-        #$gameshacks = $this->GameShack->find('all');
-        #$this->set('gameshacks', $gameshacks);
-    }
 
     public function hoard() {
         # For some reason, Gamefile::$useTable isn't working...
         $this->Gamefile->useTable = 'gamefiles';
 
+        /*
         if (!$this->request->isPost())
         {
             $this->redirect(array('controller' => 'games', 'action' => 'index'));
             return;
         }
-
-        # Pre-initialize our return statuses
+        /*
+        # TODO: Verify user agent
+        if (!$this->request->isPost())
+        {
+            $this->redirect(array('controller' => 'games', 'action' => 'index'));
+            return;
+        }
+        */
+        # Initialize our return status error codes
         $i = 1;
-        $success = array( "result" => "success" );
-        $error = array( "error" => array( "code" => $i, "message" => NULL ) );
 
         #$gameFiles = $this->request->input('json_decode', true);
         $gameFiles = array(
@@ -95,83 +70,54 @@ class GameFilesController extends AppController {
         );
 
         if (!is_array($gameFiles))
-        {
-            $error['error']['code'] = $i;
-            $error['error']['message'] = 'POST data is not a json object';
-            return new CakeResponse(array('body' => json_encode($error)));
-        }
+            return $this->makeError($i, 'POST data is not a json object');
         $i++;
 
+        # Flatten object into raw variables
         foreach (array('username', 'site', 'platform', 'directory') as $var)
         {
             if (!array_key_exists($var, $gameFiles))
-            {
-                $error['error']['code'] = $i;
-                $error['error']['message'] = "POST data doesn't contain a $var field";
-                return new CakeResponse(array('body' => json_encode($error)));
-            }
+                return $this->makeError($i, "POST data doesn't contain a $var field");
             ${$var} = $gameFiles[$var];
             $i++;
         }
 
+        if (!$platform)
+            return $this->makeError($i, 'Invalid platform');
+        $i++;
+
+        if (!$username)
+            return $this->makeError($i, 'Invalid username');
+        $i++;
+
         $validSites = array('thegamesdb.net');
         if (!in_array($site, $validSites))
-        {
-            $error['error']['code'] = $i;
-            $error['error']['message'] = "Invalid site: $site. Valid sites are: " . implode(", ", $validSites);
-            return new CakeResponse(array('body' => json_encode($error)));
-        }
+            return $this->makeError($i, "Invalid site: $site. Valid sites are: " . implode(', ', $validSites));
         $i++;
 
-        if (!$platform)
-        {
-            $error['error']['code'] = $i;
-            $error['error']['message'] = 'Invalid platform';
-            return new CakeResponse(array('body' => json_encode($error)));
-        }
-        $i++;
-        
-        # Query the user, and create a new user if one doesn't exist
-        $user = $this->Username->find('first', array(
-            'conditions' => array(
-                'username' => $username,
-            ),
-        ));
-        if (!count($user))
-        {
-            $this->Username->create(array('username' => $username));
-            $user = $this->Username->save();
-        }
+        $user = $this->loadUser($username);
+        $gamefiles = $this->getUserGames($user['Username']['id'], $platform);
 
-        $gamefiles = $this->UserOwnership->find('all', array(
-            'conditions' => array(
-                'username_id' => $user['Username']['id'],
-                'Gamefile.platform' => $platform,
-            ),
-            'contain' => 'Gamefile',
-        ));
-
-        foreach ($gamefiles as $g)
+        # TODO: $gamefiles is alphabetized, we can exploit this to reduce O(n*m) to O(n*logm)
+        foreach ($gamefiles as $gamefile)
         {
-            $gamefile = $g['Gamefile'];
             foreach ($directory as $key => $file)
             {
                 if (!array_key_exists('filename', $file))
                 {
                     unset($directory[$key]);
                 }
-                else if ($gamefile['filename'] == $file['filename'])
+                else if ($gamefile['Gamefile']['filename'] == $file['filename'])
                 {
                     # The file already exists in the database
                     # If new properties arrived, add them now
-                    if ($gamefile['property_id'] === null &&
+                    if ($gamefile['Gamefile']['property_id'] === null &&
                         array_key_exists('properties', $file))
                     {
                         $properties = $this->addProperties($file['properties']);
                         if (count($properties))
                         {
-                            $gamefile['property_id'] = $properties['Property']['id'];
-                            $g['Gamefile'] = $gamefile;
+                            $gamefile['Gamefile']['property_id'] = $properties['Property']['id'];
                             $this->Gamefile->save($g);
                         }
                     }
@@ -181,11 +127,7 @@ class GameFilesController extends AppController {
         }
 
         if (!count($directory))
-        {
-            $error['error']['code'] = $i;
-            $error['error']['message'] = 'No new files have been hoarded by the server';
-            return new CakeResponse(array('body' => json_encode($error)));
-        }
+            return $this->makeError($i, 'No new files have been hoarded by the server');
         $i++;
 
         foreach ($directory as $file)
@@ -210,7 +152,41 @@ class GameFilesController extends AppController {
             $this->UserOwnership->save();
         }
 
-        return new CakeResponse(array('body' => json_encode($success)));
+        return new CakeResponse(array(
+            'body' => json_encode(array(
+                'result' => 'success',
+            )),
+        ));
+    }
+
+    /**
+     * Query the user, and create a new user if one doesn't exist.
+     */
+    private function loadUser($username)
+    {
+        $user = $this->Username->find('first', array(
+            'conditions' => array(
+                'username' => $username,
+            ),
+        ));
+        if (!count($user))
+        {
+            $this->Username->create(array('username' => $username));
+            $user = $this->Username->save();
+        }
+        return $user;
+    }
+
+    private function getUserGames($user_id, $platform)
+    {
+        return $this->UserOwnership->find('all', array(
+            'conditions' => array(
+                'username_id' => $user_id,
+                'Gamefile.platform' => $platform,
+            ),
+            'contain' => 'Gamefile',
+            #'order' => 'Gamefile.filename',
+        ));
     }
 
     private function addProperties($properties)
@@ -240,5 +216,18 @@ class GameFilesController extends AppController {
         $this->Gamefile->create($data);
         $gamefile = $this->Gamefile->save();
         return $gamefile["Gamefile"]["id"];
+    }
+    
+    private function makeError($i, $msg)
+    {
+        $error = array(
+            'error' => array(
+                'code' => $i,
+                'message' => $msg,
+            ),
+        );
+        return new CakeResponse(array(
+                'body' => json_encode($error),
+        ));
     }
 }
