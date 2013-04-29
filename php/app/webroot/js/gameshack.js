@@ -3,7 +3,6 @@
         $('#Email').bind("change paste keydown keyup", function(e) {
             if ((e.keyCode || e.which) == 13) {
                 $(document).ready(function() {
-                    updatePasswd();
                     submit();
                 });
             }
@@ -12,7 +11,6 @@
                     updatePasswd();
                 });
             }
-            //e.preventDefault();
         });
     });
 })(jQuery);
@@ -30,6 +28,7 @@ function submit() {
     // Guard against double-submitting
     if (typeof window.submitting === 'undefined') {
         window.submitting = true;
+        updatePasswd();
         $('#loginform').submit();
     }
 }

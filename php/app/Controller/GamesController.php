@@ -16,6 +16,33 @@ class GamesController extends AppController {
     #public $uses = array('Gamefile', 'Property', 'Username', 'UserOwnership');
     public $helpers = array('Html');
 
+    public $components = array(
+        'GameShackAuth' => array(
+            'loginAction' => array(
+                'controller' => 'games',
+                'action' => 'login',
+                'plugin' => 'users',
+            ),
+            'authError' => 'Did you really think you are allowed to see that?',
+            'authenticate' => array(
+                AuthComponent::ALL => array(
+                    'userModel' => 'User',
+                    'fields' => array(
+                        'username' => 'username',
+                        'password' => 'email', # TODO: Need to use the md5-64 email hash as password field
+                    ),
+                ),
+                'Form',
+            ),
+        ),
+    );
+
+    public function beforeFilter() {
+        #$this->GameShackAuth->authorize = array('controller');
+        #$this->GameShackAuth->loginAction = array('controller' => 'users', 'action' => 'login');
+        #$this->Cookie->name = 'CookieMonster';
+    }
+
     public function index() {
         $path = func_get_args();
         /*
@@ -40,5 +67,20 @@ class GamesController extends AppController {
         // Grab all gameshacks and pass them to the view:
         #$gameshacks = $this->GameShack->find('all');
         #$this->set('gameshacks', $gameshacks);
+    }
+
+    public function login() {
+        if ($this->request->isPost())
+        {
+            if ($this->GameShackAuth->login())
+            {
+                return $this->redirect($this->GameShackAuth->redirectUrl());
+                // Prior to 2.3 use `return $this->redirect($this->GameShackAuth->redirect());`
+            }
+            else
+            {
+                $this->Session->setFlash(__('Username or password is incorrect'), 'default', array(), 'auth');
+            }
+        }
     }
 }
